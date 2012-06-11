@@ -114,7 +114,7 @@ public class ExportTread extends Thread
 	    	Main.btnStart.setText("开始");
 			return;
 		}
-	
+		
 		/* 打开文件 */
 		try {
 			outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filename),"gb2312"));

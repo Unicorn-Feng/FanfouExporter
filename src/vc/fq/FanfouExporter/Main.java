@@ -185,7 +185,7 @@ public class Main
 		panelTop.add(btnStart);
 		
 		txtLog = new JTextArea();
-		txtLog.setText("饭否消息导出工具 v1.0\r\n发布日期:2012年6月11日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
+		txtLog.setText("饭否消息导出工具 v1.0.1\r\n发布日期:2012年6月11日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
 		txtLog.setEditable(false);
 		JScrollPane scroll = new JScrollPane(txtLog);
 		sl_panelTop.putConstraint(SpringLayout.SOUTH, scroll, 234, SpringLayout.SOUTH, btnStart);
@@ -278,19 +278,21 @@ public class Main
 				JOptionPane.showMessageDialog(null, "请输入用户id及密码", "错误", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
-			
-			DateFormat df = new SimpleDateFormat("yyyyMMdd");
-			StringBuffer sb = new StringBuffer(15);
-			sb.append(df.format(new Date()));
-			if(rdbtnCSV.isSelected())
+			if(txtFileName.getText().trim() == "" || txtFileName.getText().trim().isEmpty())
 			{
-				sb.append(".csv");
+				DateFormat df = new SimpleDateFormat("yyyyMMdd");
+				StringBuffer sb = new StringBuffer(15);
+				sb.append(df.format(new Date()));
+				if(rdbtnCSV.isSelected())
+				{
+					sb.append(".csv");
+				}
+				else
+				{
+					sb.append(".xml");
+				}
+				txtFileName.setText(sb.toString());
 			}
-			else
-			{
-				sb.append(".xml");
-			}
-			txtFileName.setText(sb.toString());
 			isStart = true;
 			btnStart.setText("停止");
 			export.interrupt();
