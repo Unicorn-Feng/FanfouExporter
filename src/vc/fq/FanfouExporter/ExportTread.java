@@ -55,8 +55,8 @@ import org.json.JSONObject;
  */
 public class ExportTread extends Thread
 {
-	public static final String consumer_key = "4b6d4d676807ddb134b03e635e832baf";
-	public static final String consumer_secret = "83e014d54b2923b9d2f4440d18f226bf";
+	public static final String consumer_key = "5ee8c6fae7022acc00e5f59cbeb80372";
+	public static final String consumer_secret = "3385a4a2951d47b5f66dc6b039539c00";
 	public static final String HMAC_SHA1 = "HmacSHA1";
 	public String oauth_token;
 	public String oauth_token_secret;
