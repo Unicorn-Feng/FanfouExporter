@@ -46,6 +46,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
+import javax.swing.JCheckBox;
 
 
 /**
@@ -63,6 +64,7 @@ public class Main
 	private static JPanel panelTop = new JPanel();
 	private static Frame frame;
 	private static ButtonGroup buttongroup;
+	private static JLabel lblPath;
 	
 	public static JButton btnStart;
 	public static JRadioButton rdbtnCSV;
@@ -70,7 +72,10 @@ public class Main
 	public static JTextField txtUsr;
 	public static JTextField txtFileName;
 	public static JTextField txtPwd;
+	public static JCheckBox chkbxPic;
+	public static JTextField txtPath;
 	public static boolean isStart = false;
+
 	
 	public Main()
 	{
@@ -85,7 +90,7 @@ public class Main
 			}
 		});
 		frame.setLocationRelativeTo(null);
-		frame.setSize(500, 400);
+		frame.setSize(500, 427);
 		frame.add(panelTop);
 		SpringLayout sl_panelTop = new SpringLayout();
 		panelTop.setLayout(sl_panelTop);
@@ -96,19 +101,19 @@ public class Main
 		panelTop.add(lblUsr);
 		
 		JLabel lblPwd = new JLabel("密码");
-		sl_panelTop.putConstraint(SpringLayout.NORTH, lblPwd, 6, SpringLayout.SOUTH, lblUsr);
 		sl_panelTop.putConstraint(SpringLayout.WEST, lblPwd, 10, SpringLayout.WEST, panelTop);
 		lblPwd.setFont(new Font("宋体", Font.PLAIN, 14));
 		panelTop.add(lblPwd);
 		
 		JLabel lblFileNmae = new JLabel("文件名");
-		sl_panelTop.putConstraint(SpringLayout.NORTH, lblFileNmae, 6, SpringLayout.SOUTH, lblPwd);
-		sl_panelTop.putConstraint(SpringLayout.WEST, lblFileNmae, 0, SpringLayout.WEST, lblUsr);
+		sl_panelTop.putConstraint(SpringLayout.NORTH, lblFileNmae, 54, SpringLayout.NORTH, panelTop);
+		sl_panelTop.putConstraint(SpringLayout.SOUTH, lblPwd, -6, SpringLayout.NORTH, lblFileNmae);
+		sl_panelTop.putConstraint(SpringLayout.WEST, lblFileNmae, 10, SpringLayout.WEST, panelTop);
 		lblFileNmae.setFont(new Font("宋体", Font.PLAIN, 14));
 		panelTop.add(lblFileNmae);
 		
 		JLabel lblFileType = new JLabel("文件格式");
-		sl_panelTop.putConstraint(SpringLayout.WEST, lblFileType, 0, SpringLayout.WEST, lblUsr);
+		sl_panelTop.putConstraint(SpringLayout.WEST, lblFileType, 10, SpringLayout.WEST, panelTop);
 		lblFileType.setFont(new Font("宋体", Font.PLAIN, 14));
 		panelTop.add(lblFileType);
 		
@@ -173,6 +178,7 @@ public class Main
 		buttongroup.add(rdbtnXML);
 		
 		btnStart = new JButton("开始");
+		sl_panelTop.putConstraint(SpringLayout.WEST, btnStart, 0, SpringLayout.WEST, lblUsr);
 		btnStart.addActionListener(new ActionListener() 
 		{
 			public void actionPerformed(ActionEvent e) 
@@ -180,21 +186,58 @@ public class Main
 				onStartButtonClick();
 			}
 		});
-		sl_panelTop.putConstraint(SpringLayout.NORTH, btnStart, 6, SpringLayout.SOUTH, lblFileType);
-		sl_panelTop.putConstraint(SpringLayout.WEST, btnStart, 0, SpringLayout.WEST, lblUsr);
 		panelTop.add(btnStart);
 		
 		txtLog = new JTextArea();
-		txtLog.setText("饭否消息导出工具 v1.0.2\r\n发布日期:2012年6月13日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
+		txtLog.setText("饭否消息导出工具 v1.1.0\r\n发布日期:2012年6月24日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
 		txtLog.setEditable(false);
 		JScrollPane scroll = new JScrollPane(txtLog);
-		sl_panelTop.putConstraint(SpringLayout.SOUTH, scroll, 234, SpringLayout.SOUTH, btnStart);
+		sl_panelTop.putConstraint(SpringLayout.NORTH, scroll, 166, SpringLayout.NORTH, panelTop);
+		sl_panelTop.putConstraint(SpringLayout.SOUTH, btnStart, -6, SpringLayout.NORTH, scroll);
+		sl_panelTop.putConstraint(SpringLayout.WEST, scroll, 0, SpringLayout.WEST, lblUsr);
+		sl_panelTop.putConstraint(SpringLayout.SOUTH, scroll, -32, SpringLayout.SOUTH, panelTop);
+		sl_panelTop.putConstraint(SpringLayout.EAST, scroll, 0, SpringLayout.EAST, txtUsr);
 		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		sl_panelTop.putConstraint(SpringLayout.NORTH, scroll, 6, SpringLayout.SOUTH, btnStart);
-		sl_panelTop.putConstraint(SpringLayout.WEST, scroll, 10, SpringLayout.WEST, panelTop);
-		sl_panelTop.putConstraint(SpringLayout.EAST, scroll, -10, SpringLayout.EAST, panelTop);
 		panelTop.add(scroll);
+		
+		chkbxPic = new JCheckBox("导出图片");
+		chkbxPic.addActionListener(new ActionListener() 
+		{
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				if(chkbxPic.isSelected())
+				{
+					txtPath.setEnabled(true);
+				}
+				else
+				{
+					txtPath.setEnabled(false);
+				}
+			}
+		});
+		sl_panelTop.putConstraint(SpringLayout.NORTH, chkbxPic, -4, SpringLayout.NORTH, lblFileType);
+		sl_panelTop.putConstraint(SpringLayout.WEST, chkbxPic, 6, SpringLayout.EAST, rdbtnXML);
+		chkbxPic.setFont(new Font("宋体", Font.PLAIN, 14));
+		panelTop.add(chkbxPic);
+		
+		txtPath = new JTextField();
+		sl_panelTop.putConstraint(SpringLayout.NORTH, txtPath, 6, SpringLayout.SOUTH, rdbtnCSV);
+		sl_panelTop.putConstraint(SpringLayout.WEST, txtPath, 17, SpringLayout.WEST, txtUsr);
+		sl_panelTop.putConstraint(SpringLayout.EAST, txtPath, 0, SpringLayout.EAST, txtUsr);
+		df = new SimpleDateFormat("yyyyMMdd");
+		sb = new StringBuffer(15);
+		sb.append(df.format(new Date())).append("pic");
+		txtPath.setText(sb.toString());
+		txtPath.setColumns(10);
+		txtPath.setEnabled(false);
+		panelTop.add(txtPath);
+		
+		lblPath = new JLabel("图片文件夹名");
+		sl_panelTop.putConstraint(SpringLayout.WEST, lblPath, 0, SpringLayout.WEST, lblUsr);
+		sl_panelTop.putConstraint(SpringLayout.SOUTH, lblPath, -6, SpringLayout.NORTH, btnStart);
+		lblPath.setFont(new Font("宋体", Font.PLAIN, 14));
+		panelTop.add(lblPath);
 		frame.setVisible(true);
 	}
 	
@@ -293,6 +336,13 @@ public class Main
 				}
 				txtFileName.setText(sb.toString());
 			}
+			if(txtPath.getText().trim() == "" || txtPath.getText().trim().isEmpty())
+			{
+				DateFormat df = new SimpleDateFormat("yyyyMMdd");
+				StringBuffer sb = new StringBuffer(15);
+				sb.append(df.format(new Date())).append("pic");
+				txtPath.setText(sb.toString());
+			}
 			isStart = true;
 			btnStart.setText("停止");
 			export.interrupt();
@@ -304,5 +354,4 @@ public class Main
 			export.interrupt();
 		}
 	}
-	
 }

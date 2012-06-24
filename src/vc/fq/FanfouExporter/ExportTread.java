@@ -26,10 +26,13 @@
 
 package vc.fq.FanfouExporter;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.FileOutputStream;
@@ -92,6 +95,11 @@ public class ExportTread extends Thread
 		String password = Main.txtPwd.getText();
 		String filename = Main.txtFileName.getText();
 		isCSV = Main.rdbtnCSV.isSelected();
+		boolean exportPic = Main.chkbxPic.isSelected();
+		String outpath = Main.txtPath.getText();
+		
+		
+		setLog("\r\n尝试连接饭否");
 		
 		/* 进行XAuth认证,获取Access_Token及Access_Token_Secret */
 		String strxauth = XAuth(username,password);
@@ -132,7 +140,7 @@ public class ExportTread extends Thread
 		
 		if(isCSV == true)
 		{
-			outstream.println("时间,消息,消息id,来源,用户id,用户昵称,用户自述,用户头像地址,用户地址");
+			outstream.println("时间,消息,消息id,来源,图片地址,用户id,用户昵称,用户自述,用户头像地址,用户地址");
 		}
 		else
 		{
@@ -152,6 +160,8 @@ public class ExportTread extends Thread
 		String description;
 		String profile_image_url;
 		String location;
+		JSONObject photojson;
+		String photourl = "";
 		
 		int i = 1;
 		int errtime = 0;
@@ -207,7 +217,7 @@ public class ExportTread extends Thread
 				setLog("出现错误:\r\n" + e.getMessage() + "\r\n准备进行第" + errtime + "次重试");
 				continue;
 			}
-			
+
 			try {
 				JSONArray jsonarr = new JSONArray(line);
 				int arrlen = jsonarr.length();
@@ -223,7 +233,6 @@ public class ExportTread extends Thread
 				for(int j=0;j<arrlen;j++)
 				{
 					json[j] = jsonarr.getJSONObject(j);
-					
 					created_at = json[j].getString("created_at");
 					id = json[j].getString("id");
 					text = json[j].getString("text");
@@ -236,11 +245,24 @@ public class ExportTread extends Thread
 					profile_image_url = userjson.getString("profile_image_url");
 					location = userjson.getString("location");
 					
+					photourl = "";
+					try {
+						photojson = json[j].getJSONObject("photo");
+						photourl = photojson.getString("largeurl");
+						if(exportPic)
+						{
+							savePhoto(photourl,outpath);
+						}
+					} catch (JSONException e){
+						
+					}
+					
 					if(isCSV == true)
 					{					
 						StringBuffer sb = new StringBuffer(500);
 						sb.append(created_at).append(",\"").append(text).append("\",");
 						sb.append(id).append(",").append(source).append(",");
+						sb.append(photourl).append(",");
 						sb.append(userid).append(",").append(screen_name).append(",\"");
 						sb.append(description).append("\",").append(profile_image_url).append(",");
 						sb.append(location);
@@ -257,6 +279,10 @@ public class ExportTread extends Thread
 						outstream.println("    <source>");
 						outstream.println("      " + source);
 						outstream.println("    </source>");
+						if(photourl != "")
+						{
+							outstream.println("    <photo>" + photourl + "</photo>");
+						}
 						outstream.println("    <user>");
 						outstream.println("      <user_id>" + userid + "</user_id>");
 						outstream.println("      <screen_name>" + screen_name + "</screen_name>");
@@ -280,7 +306,59 @@ public class ExportTread extends Thread
 		}//while(true)
 	}
 
+	
+	public static void savePhoto(String photourl, String outpath)
+	{
+		URL url;
+		String photo;
+		BufferedInputStream bfis;
+		try {
+			url = new URL(photourl);
 
+			int index = photourl.lastIndexOf("/");
+			photo = photourl.substring(index+1, photourl.length());
+	
+			bfis = new BufferedInputStream(url.openStream());
+		} catch (IOException e) {
+			setLog(e.getMessage());
+			return;
+		}
+		File dirFile = new File(outpath);
+		if(!dirFile.exists() && !dirFile.isDirectory())
+		{
+			boolean mkdir = dirFile.mkdirs();
+			if(mkdir == false)
+			{
+				setLog("创建文件夹失败");
+				return;
+			}
+		}
+		File file = new File(outpath + "\\" + photo);
+		byte[] bytes = new byte[100];
+		OutputStream outstream;
+		
+		try {
+			outstream = new FileOutputStream(file);
+			int len;
+			len = bfis.read(bytes);
+			while(len>0)
+			{
+			    outstream.write(bytes,0,len);
+			    len = bfis.read(bytes);
+			}
+			bfis.close();
+			outstream.flush();
+			outstream.close();
+		} catch (FileNotFoundException e) {
+			setLog(e.getMessage());
+			return;
+		} catch (IOException e) {
+			setLog(e.getMessage());
+			return;
+		}
+	}
+
+	
 	/**
      * 在txtLog中显示日志
      * @param str
