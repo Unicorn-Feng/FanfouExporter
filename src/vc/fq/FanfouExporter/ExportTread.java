@@ -249,12 +249,12 @@ public class ExportTread extends Thread
 				setLog("成功创建图片文件夹");
 			}
 		}
-		
+
 		/* 打开文件 */
 		if(format != 3)
 		{
 			try {
-				outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filename),"gb2312"));
+				outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename),"gb2312"));
 			} catch (FileNotFoundException e) {
 				setLog(e.getMessage());
 		    	Main.isStart = false;

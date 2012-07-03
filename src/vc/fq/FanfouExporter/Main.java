@@ -213,7 +213,7 @@ public class Main
 		panelTop.add(btnStart);
 		
 		txtLog = new JTextArea();
-		txtLog.setText("饭否消息导出工具 v2.1.0\r\n发布日期:2012年7月3日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
+		txtLog.setText("饭否消息导出工具 v2.1.1\r\n发布日期:2012年7月4日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
 		txtLog.setEditable(false);
 		JScrollPane scroll = new JScrollPane(txtLog);
 		sl_panelTop.putConstraint(SpringLayout.NORTH, scroll, 166, SpringLayout.NORTH, panelTop);
