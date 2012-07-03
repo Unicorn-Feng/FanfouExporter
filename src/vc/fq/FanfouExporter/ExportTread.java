@@ -44,6 +44,12 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.swing.JOptionPane;
@@ -64,26 +70,32 @@ public class ExportTread extends Thread
 	public String oauth_token;
 	public String oauth_token_secret;
 	private PrintWriter outstream;
-	private boolean isCSV;
-	private int picnum=0;
-	
+	private int picnum = 0;
+	private int errtime = 0;
+	private int num = 0;
+	private int format;
+	private boolean exportPic;
+	private String picpath;
+	private String filepath;
+
 	
 	/**
      * 完成线程结束前的收尾工作
      */
     public void exitTread()
     {
-		if(isCSV == true)
+		if(format == 1)
 		{
 			outstream.println();
+			outstream.close();
 		}
-		else
+		else if(format == 2)
 		{
 			outstream.println("</statuses>");
+			outstream.close();
 		}
     	Main.isStart = false;
     	Main.btnStart.setText("开始");
-    	outstream.close();
     }
     
     
@@ -94,11 +106,72 @@ public class ExportTread extends Thread
 	{
 		String username = Main.txtUsr.getText();
 		String password = Main.txtPwd.getText();
-		String filename = Main.txtFileName.getText();
-		isCSV = Main.rdbtnCSV.isSelected();
-		boolean exportPic = Main.chkbxPic.isSelected();
-		String outpath = Main.txtPath.getText();
+		String userID = Main.txtFriID.getText();
+		filepath = Main.txtFilePath.getText();
+		exportPic = Main.chkbxPic.isSelected();
+		String filename;
 		
+		if(filepath.charAt(filepath.length()-1) == '/' || filepath.charAt(filepath.length()-1) == '\\')
+		{
+			filepath = filepath.substring(0,filepath.length()-1);
+		}
+		
+		int content;
+		if(Main.rdbtnUsrTL.isSelected())
+		{
+			content = 1;
+		}
+		else if(Main.rdbtnMention.isSelected())
+		{
+			content = 2;
+		}
+		else if(Main.rdbtnDM.isSelected())
+		{
+			content = 3;
+		}
+		else
+		{
+			content = 4;
+		}
+		
+
+        DateFormat df = new SimpleDateFormat("yyyyMMdd");
+        StringBuffer sb = new StringBuffer(15);
+		if(content == 4)
+		{
+			sb.append(df.format(new Date()));
+			sb.append(userID);
+		}
+		else
+		{
+	        sb.append(df.format(new Date()));
+			sb.append(username);
+		}
+		
+		if(Main.rdbtnCSV.isSelected())
+		{
+			format = 1;
+			sb.append(".csv");
+			filename = sb.toString();
+		}
+		else if(Main.rdbtnXML.isSelected())
+		{
+			format = 2;
+			sb.append(".xml");
+			filename = sb.toString();
+		}
+		else
+		{
+			format = 3;
+			sb.append("_1.html");
+			filename = sb.toString();
+		}
+		sb = null;
+		setLog("\r\n导出数据存储在" + filepath + "\\" + filename);
+		if(exportPic)
+		{
+			setLog("图片存储在" + filepath + "\\" + df.format(new Date()) + "pic 目录下");
+		}
 		
 		setLog("\r\n尝试连接饭否...");
 		
@@ -124,16 +197,54 @@ public class ExportTread extends Thread
 			return;
 		}
 		
+		filepath = filepath.replace("\\", "/");
+		
+		File dirFile = new File(filepath);
+		boolean mkdir;
+		if(!dirFile.exists() && !dirFile.isDirectory())
+		{
+			int option = JOptionPane.showConfirmDialog(null, "该目录不存在,是否创建?", "找不到路径", JOptionPane.YES_NO_OPTION);
+			if(option == JOptionPane.YES_OPTION)
+			{
+				mkdir = dirFile.mkdirs();
+				if(mkdir == false)
+				{
+					setLog("创建文件夹失败");
+			    	Main.isStart = false;
+			    	Main.btnStart.setText("开始");
+					return;
+				}
+				setLog("路径创建成功");
+			}
+			else
+			{
+				setLog("请重新选择路径");
+		    	Main.isStart = false;
+		    	Main.btnStart.setText("开始");
+				return;
+			}
+		}
+		
 		/* 创建图片文件夹 */
+		if(content == 4)
+		{
+			picpath = filepath + "/" + df.format(new Date()) + userID + "pic";
+		}
+		else
+		{
+			picpath = filepath + "/" + df.format(new Date()) + username + "pic";
+		}
 		if(exportPic)
 		{
-			File dirFile = new File(outpath);
+			dirFile = new File(picpath);
 			if(!dirFile.exists() && !dirFile.isDirectory())
 			{
-				boolean mkdir = dirFile.mkdirs();
+				mkdir = dirFile.mkdirs();
 				if(mkdir == false)
 				{
 					setLog("创建图片文件夹失败");
+			    	Main.isStart = false;
+			    	Main.btnStart.setText("开始");
 					return;
 				}
 				setLog("成功创建图片文件夹");
@@ -141,25 +252,28 @@ public class ExportTread extends Thread
 		}
 		
 		/* 打开文件 */
-		try {
-			outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filename),"gb2312"));
-		} catch (FileNotFoundException e) {
-			setLog(e.getMessage());
-	    	Main.isStart = false;
-	    	Main.btnStart.setText("开始");
-			return;
-		} catch (UnsupportedEncodingException e) {
-			setLog(e.getMessage());
-	    	Main.isStart = false;
-	    	Main.btnStart.setText("开始");
-			return;
+		if(format != 3)
+		{
+			try {
+				outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filename),"gb2312"));
+			} catch (FileNotFoundException e) {
+				setLog(e.getMessage());
+		    	Main.isStart = false;
+		    	Main.btnStart.setText("开始");
+				return;
+			} catch (UnsupportedEncodingException e) {
+				setLog(e.getMessage());
+		    	Main.isStart = false;
+		    	Main.btnStart.setText("开始");
+				return;
+			}
 		}
 		
-		if(isCSV == true)
+		if(format == 1)
 		{
 			outstream.println("时间,消息,消息id,来源,图片地址,用户id,用户昵称,用户自述,用户头像地址,用户地址");
 		}
-		else
+		else if(format == 2)
 		{
 			outstream.println("<?xml version=\"1.0\" encoding=\"GB2312\"?>");
 			outstream.println("<statuses>");
@@ -167,22 +281,7 @@ public class ExportTread extends Thread
 		
 		HttpURLConnection connection;
 		
-		String created_at;
-		String id;
-		String text;
-		String source;
-		JSONObject userjson;
-		String userid;
-		String screen_name;
-		String description;
-		String profile_image_url;
-		String location;
-		JSONObject photojson;
-		String photourl = "";
-		
-		int i = 1;
-		int errtime = 0;
-		int num = 0;
+		int page = 1;
 			
 		while(true)
 		{
@@ -194,8 +293,23 @@ public class ExportTread extends Thread
 	        	exitTread();
 	    		return;
 	    	}
-			
-			connection = timeline(i);
+
+	    	if(content == 1)
+	    	{
+	    		connection = timeline(page);
+	    	}
+	    	else if(content == 2)
+	    	{
+	    		connection = timeline(page);
+	    	}
+	    	else if(content == 3)
+	    	{
+	    		connection = timeline(page);
+	    	}
+	    	else
+	    	{
+	    		connection = timeline(page,userID);
+	    	}
 			
 			if(errtime >= 5)
 			{
@@ -207,9 +321,38 @@ public class ExportTread extends Thread
 			try {
 				if(connection.getResponseCode() == 200)
 				{
-	
 					BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 					line = reader.readLine();
+				}
+				else if(connection.getResponseCode() == 403)
+				{
+					BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+					String log = "";
+					line = reader.readLine();
+					while(line != null)
+					{
+						log = log + "\r\n" + line;
+						line = reader.readLine();
+					}
+					setLog(log);
+					setLog("您没有对该用户的访问权限，请确认您已加TA为好友");
+					exitTread();
+					return;
+				}
+				else if(connection.getResponseCode() == 404)
+				{
+					BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+					String log = "";
+					line = reader.readLine();
+					while(line != null)
+					{
+						log = log + "\r\n" + line;
+						line = reader.readLine();
+					}
+					setLog(log);
+					setLog("没有这个用户");
+					exitTread();
+					return;
 				}
 				else
 				{
@@ -234,102 +377,85 @@ public class ExportTread extends Thread
 				setLog("出现错误:\r\n" + e.getMessage() + "\r\n准备进行第" + errtime + "次重试");
 				continue;
 			}
-
-			try {
-				JSONArray jsonarr = new JSONArray(line);
-				int arrlen = jsonarr.length();
-				if(arrlen == 0)
-				{
-					setLog("\r\n完成导出\r\n共导出" + String.valueOf(num) + "条消息");
-					exitTread();
-	        		return;
-				}
-				JSONObject[] json = new JSONObject[61];
-
-				/* 由JSON中分离信息并写入文件 */
-				for(int j=0;j<arrlen;j++)
-				{
-					json[j] = jsonarr.getJSONObject(j);
-					created_at = json[j].getString("created_at");
-					id = json[j].getString("id");
-					text = json[j].getString("text");
-					source = json[j].getString("source");
-					userjson = json[j].getJSONObject("user");
-	
-					userid = userjson.getString("id");
-					screen_name = userjson.getString("screen_name");
-					description = userjson.getString("description");
-					profile_image_url = userjson.getString("profile_image_url");
-					location = userjson.getString("location");
-					
-					photourl = "";
-					try {
-						photojson = json[j].getJSONObject("photo");
-						photourl = photojson.getString("largeurl");
-						if(exportPic)
-						{
-							savePhoto(photourl,outpath);
-						}
-					} catch (JSONException e){
-						
-					}
-					
-					if(isCSV == true)
-					{					
-						StringBuffer sb = new StringBuffer(500);
-						sb.append(created_at).append(",\"").append(text).append("\",");
-						sb.append(id).append(",").append(source).append(",");
-						sb.append(photourl).append(",");
-						sb.append(userid).append(",").append(screen_name).append(",\"");
-						sb.append(description).append("\",").append(profile_image_url).append(",");
-						sb.append(location);
-						outstream.println(sb.toString());
-					}
-					else
-					{
-						outstream.println("  <status>");
-						outstream.println("    <created_at>" + created_at + "</created_at>");
-						outstream.println("    <text>");
-						outstream.println("      " + text);
-						outstream.println("    </text>");
-						outstream.println("    <id>" + id + "</id>");
-						outstream.println("    <source>");
-						outstream.println("      " + source);
-						outstream.println("    </source>");
-						if(photourl != "")
-						{
-							outstream.println("    <photo>" + photourl + "</photo>");
-						}
-						outstream.println("    <user>");
-						outstream.println("      <user_id>" + userid + "</user_id>");
-						outstream.println("      <screen_name>" + screen_name + "</screen_name>");
-						outstream.println("      <description>" + description + "</description>");
-						outstream.println("      <profile_image_url>" + profile_image_url + "</profile_image_url>");
-						outstream.println("      <location>" + location + "</location>");
-						outstream.println("    </user>");
-						outstream.println("  </status>");
-					}
-					
-				}//for
-				errtime = 0;
-				num = num + arrlen;
-				setLog("完成导出"+ String.valueOf(num) + "条消息");
-			} catch (JSONException e) {
-				errtime++;
-				setLog("出现错误:\r\n" + e.getMessage() + "\r\n准备进行第" + errtime + "次重试");
-				continue;
-			}
-			i++;
+			writeFile(line,format,page);
+			page++;
 		}//while(true)
 	}
 
 	
 	/**
+	 * 获取月份
+	 * @param month
+	 * @return 数字月份
+	 */
+	public static int getMonth(String month)
+	{
+		if(month.equals("Jan"))
+			return 1;
+		else if(month.equals("Feb"))
+			return 2;
+		else if(month.equals("Mar"))
+			return 3;
+		else if(month.equals("Apr"))
+			return 4;
+		else if(month.equals("May"))
+			return 5;
+		else if(month.equals("Jun"))
+			return 6;
+		else if(month.equals("Jul"))
+			return 7;
+		else if(month.equals("Aug"))
+			return 8;
+		else if(month.equals("Sep"))
+			return 9;
+		else if(month.equals("Oct"))
+			return 10;
+		else if(month.equals("Nov"))
+			return 11;
+		else if(month.equals("Dec"))
+			return 12;
+		else
+			return -1;
+	}
+
+
+	/**
+	 * 格式化时间
+	 * @param strdate UTC时间 "Mon Mar 26 09:28:48 +0000 2012"
+	 * @return 北京时间 "2012-03-26 17:28:48"
+	 */
+	public static String getStrDate(String strdate)
+	{
+		String strTmp;
+		int year,month,day,hour,minute,second;
+		
+		strTmp = strdate.substring(26,30);
+		year = Integer.parseInt(strTmp);
+		strTmp = strdate.substring(4,7);
+		month = getMonth(strTmp);
+		strTmp = strdate.substring(8,10);
+		day = Integer.parseInt(strTmp);
+		strTmp = strdate.substring(11,13);
+		hour = Integer.parseInt(strTmp);
+		strTmp = strdate.substring(14,16);
+		minute = Integer.parseInt(strTmp);
+		strTmp = strdate.substring(17,19);
+		second = Integer.parseInt(strTmp);
+		
+		Calendar calendar = new GregorianCalendar(year,month-1,day,hour,minute,second);
+		calendar.add(Calendar.HOUR_OF_DAY, 8);
+		SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd kk:mm:ss");
+		return format.format(calendar.getTime());
+	}
+
+
+	/**
 	 * 从photourl中读取图片并保持到outpath指示的目录下
 	 * @param photourl 图片URL地址
 	 * @param outpath 目标文件夹名称
+	 * @return 图片文件名
 	 */
-	public void savePhoto(String photourl, String outpath)
+	public String savePhoto(String photourl, String outpath)
 	{
 		URL url;
 		String photo;
@@ -343,7 +469,7 @@ public class ExportTread extends Thread
 			bfis = new BufferedInputStream(url.openStream());
 		} catch (IOException e) {
 			setLog(e.getMessage());
-			return;
+			return "";
 		}
 
 		File file = new File(outpath + "\\" + photo);
@@ -364,12 +490,13 @@ public class ExportTread extends Thread
 			outstream.close();
 			picnum++;
 			setLog("成功保存" + String.valueOf(picnum) + "张图片");
+			return photo;
 		} catch (FileNotFoundException e) {
 			setLog(e.getMessage());
-			return;
+			return "";
 		} catch (IOException e) {
 			setLog(e.getMessage());
-			return;
+			return "";
 		}
 	}
 
@@ -391,11 +518,12 @@ public class ExportTread extends Thread
 	/**
 	 * 调用 GET /statuses/user_timeline 浏览指定用户已发送消息
 	 * @param pageID 指定返回结果的页码
+	 * @param userID 指定用户ID
 	 * @return
 	 * @see https://github.com/FanfouAPI/FanFouAPIDoc/wiki/statuses.user-timeline
 	 */
 	@SuppressWarnings("deprecation")
-	public HttpURLConnection timeline(int page)
+	public HttpURLConnection timeline(int page, String userID)
 	{
 		long timestamp = System.currentTimeMillis() / 1000;
 		long nonce = System.nanoTime();
@@ -404,6 +532,10 @@ public class ExportTread extends Thread
 		
 		StringBuffer strBuf = new StringBuffer(200);
 		strBuf.append("count=60");
+		if(userID != null)
+		{
+			strBuf.append("&id=").append(userID);
+		}
 		strBuf.append("&oauth_consumer_key=").append(consumer_key);
 		strBuf.append("&oauth_nonce=").append(nonce);
 		strBuf.append("&oauth_signature_method=HMAC-SHA1");
@@ -411,12 +543,13 @@ public class ExportTread extends Thread
 		strBuf.append("&oauth_token=").append(oauth_token);
 		String params = strBuf.toString();
 		
+
 		params = params + "&page=" + pageID;
 
 		params = "GET&" + URLEncoder.encode(strURL)
 					+ "&" + URLEncoder.encode(params);
 		String sig = generateSignature(params,oauth_token_secret);
-		
+
 		strBuf = new StringBuffer(280); 
 		strBuf.append("OAuth realm=\"Fantalker\",oauth_consumer_key=\"");
 		strBuf.append(consumer_key);
@@ -428,6 +561,10 @@ public class ExportTread extends Thread
 		String authorization =  strBuf.toString();
 		
 		strURL = strURL + "?count=60&page=" + pageID;
+		if(userID != null)
+		{
+			strURL = strURL + "&id=" + userID;
+		}
 		try {
 			URL url = new URL(strURL);
 			HttpURLConnection connection;
@@ -444,7 +581,19 @@ public class ExportTread extends Thread
 		return null;
 	}
     
+	
+	/**
+	 * 调用 GET /statuses/user_timeline 浏览指定用户已发送消息
+	 * @param pageID 指定返回结果的页码
+	 * @return
+	 * @see https://github.com/FanfouAPI/FanFouAPIDoc/wiki/statuses.user-timeline
+	 */
+	public HttpURLConnection timeline(int page)
+	{
+		return timeline(page,null);
+	}
     
+	
 	/**
 	 * 完成XAuth绑定
 	 * @param username
@@ -537,6 +686,191 @@ public class ExportTread extends Thread
 		} catch (IOException e) {
 			setLog("创建输入流时发生 I/O错误:" + e.getMessage());
 			return null;
+		}
+	}
+
+
+	/**
+	 * 写文件
+	 * @param line 读取到的JSON内容
+	 * @param format 格式 1csv 2xml 3html
+	 * @param page 页码
+	 */
+	public void writeFile(String line, int format, int page)
+	{
+		String created_at;
+		String id;
+		String text;
+		String source;
+		JSONObject userjson;
+		String userid;
+		String screen_name;
+		String description;
+		String profile_image_url;
+		String location;
+		JSONObject photojson;
+		String photourl = "";
+		String filename;
+		String fname = null;	//文件名(不含扩展)
+		@SuppressWarnings("unused")
+		String picname;
+		/* 由JSON中分离信息并写入文件 */
+		try {
+			JSONArray jsonarr = new JSONArray(line);
+			int arrlen = jsonarr.length();
+			if(arrlen == 0)
+			{
+				setLog("\r\n完成导出\r\n共导出" + String.valueOf(num) + "条消息");
+				exitTread();
+	    		return;
+			}
+			
+			if(format == 3)
+			{
+				DateFormat df = new SimpleDateFormat("yyyyMMdd");
+		        StringBuffer sb = new StringBuffer(20);
+				if(Main.rdbtnFriTL.isSelected())
+				{
+					sb.append(df.format(new Date())).append(Main.txtFriID.getText());
+					fname = sb.toString();
+					sb.append("_").append(page).append(".html");
+				}
+				else
+				{
+			        sb.append(df.format(new Date()));
+					sb.append(Main.txtUsr.getText());
+					fname = sb.toString();
+			        sb.append("_").append(page).append(".html");
+				}
+				filename = filepath + "/" + sb.toString();
+				try {
+					outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filename),"gb2312"));
+					outstream.println("<html>");
+					outstream.println("<head>");
+					outstream.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=gb2312\">");
+					outstream.println("<title>" + filename + "</title>");
+					outstream.println("</head>");
+					outstream.println("<body>");
+					outstream.print("<a href=\"" + fname + "_" + String.valueOf(page-1) + ".html\">上一页</a>  ");
+					outstream.println("<a href=\"" + fname + "_" + String.valueOf(page+1) + ".html\">下一页</a><br /><hr><br />");
+				} catch (FileNotFoundException e) {
+					setLog(e.getMessage());
+			    	Main.isStart = false;
+			    	Main.btnStart.setText("开始");
+			    	Main.export.interrupt();
+					return;
+				} catch (UnsupportedEncodingException e) {
+					setLog(e.getMessage());
+			    	Main.isStart = false;
+			    	Main.btnStart.setText("开始");
+			    	Main.export.interrupt();
+					return;
+				}
+			}
+			
+			JSONObject[] json = new JSONObject[61];
+			for(int j=0;j<arrlen;j++)
+			{
+				json[j] = jsonarr.getJSONObject(j);
+				created_at = json[j].getString("created_at");
+				created_at = getStrDate(created_at);
+				id = json[j].getString("id");
+				text = json[j].getString("text");
+				source = json[j].getString("source");
+				userjson = json[j].getJSONObject("user");
+	
+				userid = userjson.getString("id");
+				screen_name = userjson.getString("screen_name");
+				description = userjson.getString("description");
+				profile_image_url = userjson.getString("profile_image_url");
+				location = userjson.getString("location");
+				
+				photourl = "";
+				try {
+					photojson = json[j].getJSONObject("photo");
+					photourl = photojson.getString("largeurl");
+					if(exportPic)
+					{
+						picname = savePhoto(photourl,picpath);
+					}
+				} catch (JSONException e){
+					
+				}
+				
+				if(format == 1)		//csv
+				{					
+					StringBuffer sb = new StringBuffer(500);
+					sb.append(created_at).append(",\"").append(text).append("\",");
+					sb.append(id).append(",").append(source).append(",");
+					sb.append(photourl).append(",");
+					sb.append(userid).append(",").append(screen_name).append(",\"");
+					sb.append(description).append("\",").append(profile_image_url).append(",");
+					sb.append(location);
+					outstream.println(sb.toString());
+				}
+				else if(format == 2)	//xml
+				{
+					outstream.println("  <status>");
+					outstream.println("    <created_at>" + created_at + "</created_at>");
+					outstream.println("    <text>");
+					outstream.println("      " + text);
+					outstream.println("    </text>");
+					outstream.println("    <id>" + id + "</id>");
+					outstream.println("    <source>");
+					outstream.println("      " + source);
+					outstream.println("    </source>");
+					if(photourl != "")
+					{
+						outstream.println("    <photo>" + photourl + "</photo>");
+					}
+					outstream.println("    <user>");
+					outstream.println("      <user_id>" + userid + "</user_id>");
+					outstream.println("      <screen_name>" + screen_name + "</screen_name>");
+					outstream.println("      <description>" + description + "</description>");
+					outstream.println("      <profile_image_url>" + profile_image_url + "</profile_image_url>");
+					outstream.println("      <location>" + location + "</location>");
+					outstream.println("    </user>");
+					outstream.println("  </status>");
+				}
+				else	//html
+				{
+					outstream.println("<b>" + screen_name + "</b> " + userid);
+					outstream.println("<br />");
+					outstream.println("<small>" + description + "</small>");
+					outstream.println("<br />");
+					outstream.println("<small><i>" + location + "</i></small>");
+					outstream.println("<br /><br />");
+					outstream.println(text);
+					outstream.println("<br /><br />");
+					if(photourl != "")
+					{
+						outstream.println("<img src=\"" + photourl + "\" /><br />");
+					}
+					outstream.println("<small>" + created_at + "</small>");
+					outstream.println("<br /><small>" + "通过 " + source + "</small>");
+					outstream.println("<br />");
+					outstream.println("<small>id: " + id + "</small>");
+					outstream.println("<br /><br />");
+					outstream.println("<hr><br />");
+				}
+				
+			}//for
+			
+			num = num + arrlen;
+			setLog("完成导出"+ String.valueOf(num) + "条消息");
+			errtime = 0;
+	
+		} catch (JSONException e) {
+			errtime++;
+			setLog("出现错误:\r\n" + e.getMessage() + "\r\n准备进行第" + errtime + "次重试");
+		}
+		if(format == 3)
+		{
+			outstream.print("<a href=\"" + fname + "_" + String.valueOf(page-1) + ".html\">上一页</a>  ");
+			outstream.println("<a href=\"" + fname + "_" + String.valueOf(page+1) + ".html\">下一页</a><br />");
+			outstream.println("</body>");
+			outstream.println("</html>");
+			outstream.close();
 		}
 	}
 
