@@ -49,7 +49,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.swing.JOptionPane;
@@ -289,7 +288,7 @@ public class ExportTread extends Thread
 	    		setLog("等待5s,准备开始导出第" + String.valueOf(num+1) + "条消息");
 	    		Thread.sleep(5000);	//暂停5s
 	    	} catch (InterruptedException e) {
-	    		setLog("用户终止\r\n已导出" + String.valueOf(num) + "条消息");
+	    		setLog("成功终止\r\n已导出" + String.valueOf(num) + "条消息");
 	        	exitTread();
 	    		return;
 	    	}
@@ -300,7 +299,7 @@ public class ExportTread extends Thread
 	    	}
 	    	else if(content == 2)
 	    	{
-	    		connection = timeline(page);
+	    		connection = mention(page);
 	    	}
 	    	else if(content == 3)
 	    	{
@@ -446,6 +445,64 @@ public class ExportTread extends Thread
 		calendar.add(Calendar.HOUR_OF_DAY, 8);
 		SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd kk:mm:ss");
 		return format.format(calendar.getTime());
+	}
+
+
+	/**
+	 * 调用 GET /statuses/mentions 显示回复/提到当前用户的60条消息
+	 * @param pageID 指定返回结果的页码
+	 * @return
+	 * @see https://github.com/FanfouAPI/FanFouAPIDoc/wiki/statuses.mentions
+	 */
+	@SuppressWarnings("deprecation")
+	public HttpURLConnection mention(int page)
+	{
+		long timestamp = System.currentTimeMillis() / 1000;
+		long nonce = System.nanoTime();
+		String strURL = "http://api.fanfou.com/statuses/mentions.json";
+		String pageID = String.valueOf(page);
+		
+		StringBuffer strBuf = new StringBuffer(200);
+		strBuf.append("count=60");
+		strBuf.append("&oauth_consumer_key=").append(consumer_key);
+		strBuf.append("&oauth_nonce=").append(nonce);
+		strBuf.append("&oauth_signature_method=HMAC-SHA1");
+		strBuf.append("&oauth_timestamp=").append(timestamp);
+		strBuf.append("&oauth_token=").append(oauth_token);
+		String params = strBuf.toString();
+		
+	
+		params = params + "&page=" + pageID;
+	
+		params = "GET&" + URLEncoder.encode(strURL)
+					+ "&" + URLEncoder.encode(params);
+		String sig = generateSignature(params,oauth_token_secret);
+	
+		strBuf = new StringBuffer(280); 
+		strBuf.append("OAuth realm=\"Fantalker\",oauth_consumer_key=\"");
+		strBuf.append(consumer_key);
+		strBuf.append("\",oauth_signature_method=\"HMAC-SHA1\"");
+		strBuf.append(",oauth_timestamp=\"").append(timestamp).append("\"");
+		strBuf.append(",oauth_nonce=\"").append(nonce).append("\"");
+		strBuf.append(",oauth_signature=\"").append(sig).append("\"");
+		strBuf.append(",oauth_token=\"").append(oauth_token).append("\"");
+		String authorization =  strBuf.toString();
+		
+		strURL = strURL + "?count=60&page=" + pageID;
+		try {
+			URL url = new URL(strURL);
+			HttpURLConnection connection;
+			connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("GET");
+			connection.addRequestProperty("Authorization",authorization);
+			connection.connect();
+			return connection;
+		} catch (SocketTimeoutException e) {
+			setLog("连接超时 " + e.getMessage());
+		} catch (IOException e) {
+			setLog(e.getMessage());
+		}
+		return null;
 	}
 
 
@@ -722,6 +779,7 @@ public class ExportTread extends Thread
 			{
 				setLog("\r\n完成导出\r\n共导出" + String.valueOf(num) + "条消息");
 				exitTread();
+				Main.export.interrupt();
 	    		return;
 			}
 			
