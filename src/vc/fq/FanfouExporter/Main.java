@@ -3,12 +3,12 @@
  * All rights reserved.
  * 
  * This file is part of FanfouExporter.
- * Fantalker is free software: you can redistribute it and/or modify
+ * FanfouExporter is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
  * 
- * Fantalker is distributed in the hope that it will be useful,
+ * FanfouExporter is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -189,7 +189,7 @@ public class Main
 		panelTop.add(btnStart);
 		
 		txtLog = new JTextArea();
-		txtLog.setText("饭否消息导出工具 v1.1.0\r\n发布日期:2012年6月24日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
+		txtLog.setText("饭否消息导出工具 v1.1.1\r\n发布日期:2012年6月26日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
 		txtLog.setEditable(false);
 		JScrollPane scroll = new JScrollPane(txtLog);
 		sl_panelTop.putConstraint(SpringLayout.NORTH, scroll, 166, SpringLayout.NORTH, panelTop);

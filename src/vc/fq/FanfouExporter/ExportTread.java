@@ -3,12 +3,12 @@
  * All rights reserved.
  * 
  * This file is part of FanfouExporter.
- * Fantalker is free software: you can redistribute it and/or modify
+ * FanfouExporter is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
  * 
- * Fantalker is distributed in the hope that it will be useful,
+ * FanfouExporter is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -65,6 +65,7 @@ public class ExportTread extends Thread
 	public String oauth_token_secret;
 	private PrintWriter outstream;
 	private boolean isCSV;
+	private int picnum=0;
 	
 	
 	/**
@@ -99,7 +100,7 @@ public class ExportTread extends Thread
 		String outpath = Main.txtPath.getText();
 		
 		
-		setLog("\r\n尝试连接饭否");
+		setLog("\r\n尝试连接饭否...");
 		
 		/* 进行XAuth认证,获取Access_Token及Access_Token_Secret */
 		String strxauth = XAuth(username,password);
@@ -121,6 +122,22 @@ public class ExportTread extends Thread
 	    	Main.isStart = false;
 	    	Main.btnStart.setText("开始");
 			return;
+		}
+		
+		/* 创建图片文件夹 */
+		if(exportPic)
+		{
+			File dirFile = new File(outpath);
+			if(!dirFile.exists() && !dirFile.isDirectory())
+			{
+				boolean mkdir = dirFile.mkdirs();
+				if(mkdir == false)
+				{
+					setLog("创建图片文件夹失败");
+					return;
+				}
+				setLog("成功创建图片文件夹");
+			}
 		}
 		
 		/* 打开文件 */
@@ -307,7 +324,12 @@ public class ExportTread extends Thread
 	}
 
 	
-	public static void savePhoto(String photourl, String outpath)
+	/**
+	 * 从photourl中读取图片并保持到outpath指示的目录下
+	 * @param photourl 图片URL地址
+	 * @param outpath 目标文件夹名称
+	 */
+	public void savePhoto(String photourl, String outpath)
 	{
 		URL url;
 		String photo;
@@ -323,16 +345,7 @@ public class ExportTread extends Thread
 			setLog(e.getMessage());
 			return;
 		}
-		File dirFile = new File(outpath);
-		if(!dirFile.exists() && !dirFile.isDirectory())
-		{
-			boolean mkdir = dirFile.mkdirs();
-			if(mkdir == false)
-			{
-				setLog("创建文件夹失败");
-				return;
-			}
-		}
+
 		File file = new File(outpath + "\\" + photo);
 		byte[] bytes = new byte[100];
 		OutputStream outstream;
@@ -349,6 +362,8 @@ public class ExportTread extends Thread
 			bfis.close();
 			outstream.flush();
 			outstream.close();
+			picnum++;
+			setLog("成功保存" + String.valueOf(picnum) + "张图片");
 		} catch (FileNotFoundException e) {
 			setLog(e.getMessage());
 			return;
