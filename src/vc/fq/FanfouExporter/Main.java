@@ -27,8 +27,10 @@
 package vc.fq.FanfouExporter;
 
 import java.awt.Frame;
+import java.io.File;
 import java.io.IOException;
 import javax.swing.ButtonGroup;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -159,11 +161,17 @@ public class Main
 		});
 		
 		JButton btnBrowse = new JButton("浏览");
-		btnBrowse.setEnabled(false);
 		btnBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
-				
+				JFileChooser chooser = new JFileChooser(txtFilePath.getText());
+				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				int r = chooser.showOpenDialog(null);
+				if(r == JFileChooser.APPROVE_OPTION)
+				{
+					File f = chooser.getSelectedFile();
+					txtFilePath.setText(f.getPath());
+				}
 			}
 		});
 		sl_panelTop.putConstraint(SpringLayout.EAST, txtFilePath, -6, SpringLayout.WEST, btnBrowse);
@@ -215,7 +223,7 @@ public class Main
 		panelTop.add(btnStart);
 		
 		txtLog = new JTextArea();
-		txtLog.setText("饭否消息导出工具 v2.2.0\r\n发布日期:2012年7月5日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
+		txtLog.setText("饭否消息导出工具 v2.3.0\r\n发布日期:2012年7月5日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
 		txtLog.setEditable(false);
 		JScrollPane scroll = new JScrollPane(txtLog);
 		sl_panelTop.putConstraint(SpringLayout.SOUTH, btnStart, -6, SpringLayout.NORTH, scroll);
