@@ -73,9 +73,12 @@ public class ExportTread extends Thread
 	private int errtime = 0;
 	private int num = 0;
 	private int format;
+	private int content;
 	private boolean exportPic;
 	private String picpath;
 	private String filepath;
+	private String filename;
+	private String extention;
 
 	
 	/**
@@ -108,68 +111,59 @@ public class ExportTread extends Thread
 		String userID = Main.txtFriID.getText();
 		filepath = Main.txtFilePath.getText();
 		exportPic = Main.chkbxPic.isSelected();
-		String filename;
 		
 		if(filepath.charAt(filepath.length()-1) == '/' || filepath.charAt(filepath.length()-1) == '\\')
 		{
 			filepath = filepath.substring(0,filepath.length()-1);
 		}
 		
-		int content;
+        DateFormat df = new SimpleDateFormat("yyyyMMdd");
 		if(Main.rdbtnUsrTL.isSelected())
 		{
 			content = 1;
+			filename = df.format(new Date()) + "_" + username + "_tl";
 		}
 		else if(Main.rdbtnMention.isSelected())
 		{
 			content = 2;
+			filename = df.format(new Date()) + "_" + username + "_mention";
 		}
 		else if(Main.rdbtnDM.isSelected())
 		{
 			content = 3;
+			filename = df.format(new Date()) + "_" + username + "_dm";
 		}
-		else
+		else if(Main.rdbtnFriTL.isSelected())
 		{
 			content = 4;
+			filename = df.format(new Date()) + "_" + userID + "_tl";
 		}
-		
-
-        DateFormat df = new SimpleDateFormat("yyyyMMdd");
-        StringBuffer sb = new StringBuffer(15);
-		if(content == 4)
+		else																	//收藏
 		{
-			sb.append(df.format(new Date()));
-			sb.append(userID);
-		}
-		else
-		{
-	        sb.append(df.format(new Date()));
-			sb.append(username);
+			content = 5;
+			filename = df.format(new Date()) + "_" + username + "_fav";
 		}
 		
 		if(Main.rdbtnCSV.isSelected())
 		{
 			format = 1;
-			sb.append(".csv");
-			filename = sb.toString();
+			extention = ".csv";
 		}
 		else if(Main.rdbtnXML.isSelected())
 		{
 			format = 2;
-			sb.append(".xml");
-			filename = sb.toString();
+			extention = ".xml";
 		}
 		else
 		{
 			format = 3;
-			sb.append("_1.html");
-			filename = sb.toString();
+			extention = ".html";
 		}
-		sb = null;
-		setLog("\r\n导出数据存储在" + filepath + "\\" + filename);
+
+		setLog("\r\n导出数据存储在" + filepath + "\\" + filename + extention);
 		if(exportPic)
 		{
-			setLog("图片存储在" + filepath + "\\" + df.format(new Date()) + "pic 目录下");
+			setLog("图片存储在" + filepath + "\\" + filename + "_pic 目录下");
 		}
 		
 		setLog("\r\n尝试连接饭否...");
@@ -225,16 +219,9 @@ public class ExportTread extends Thread
 		}
 		
 		/* 创建图片文件夹 */
-		if(content == 4)
-		{
-			picpath = filepath + "/" + df.format(new Date()) + userID + "pic";
-		}
-		else
-		{
-			picpath = filepath + "/" + df.format(new Date()) + username + "pic";
-		}
 		if(exportPic)
 		{
+			picpath = filepath + "/" + filename + "_pic";
 			dirFile = new File(picpath);
 			if(!dirFile.exists() && !dirFile.isDirectory())
 			{
@@ -251,10 +238,10 @@ public class ExportTread extends Thread
 		}
 
 		/* 打开文件 */
-		if(format != 3)
+		if(format != 3)															//不为html格式
 		{
 			try {
-				outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename),"gb2312"));
+				outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename + extention),"gb2312"));
 			} catch (FileNotFoundException e) {
 				setLog(e.getMessage());
 		    	Main.isStart = false;
@@ -293,21 +280,25 @@ public class ExportTread extends Thread
 	    		return;
 	    	}
 
-	    	if(content == 1)
+	    	if(content == 1)													//已发消息
 	    	{
 	    		connection = timeline(page);
 	    	}
-	    	else if(content == 2)
+	    	else if(content == 2)												//提到我的
 	    	{
 	    		connection = mention(page);
 	    	}
-	    	else if(content == 3)
+	    	else if(content == 3)												//私信
 	    	{
 	    		connection = timeline(page);
 	    	}
-	    	else
+	    	else if(content == 4)												//指定好友已发消息
 	    	{
 	    		connection = timeline(page,userID);
+	    	}
+	    	else																//收藏
+	    	{
+	    		connection = favorites(page);
 	    	}
 			
 			if(errtime >= 5)
@@ -383,6 +374,76 @@ public class ExportTread extends Thread
 
 	
 	/**
+	 * 通过GET方法连接饭否API
+	 * @param strURL
+	 * @param page
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public HttpURLConnection connectAPI(String strURL, int page)
+	{
+		long timestamp = System.currentTimeMillis() / 1000;
+		long nonce = System.nanoTime();
+		String pageID = String.valueOf(page);
+		
+		StringBuffer strBuf = new StringBuffer(210);
+		strBuf.append("count=60");
+		strBuf.append("&oauth_consumer_key=").append(consumer_key);
+		strBuf.append("&oauth_nonce=").append(nonce);
+		strBuf.append("&oauth_signature_method=HMAC-SHA1");
+		strBuf.append("&oauth_timestamp=").append(timestamp);
+		strBuf.append("&oauth_token=").append(oauth_token);
+		String params = strBuf.toString();
+		System.out.println(params.length());
+	
+		params = params + "&page=" + pageID;
+
+		params = "GET&" + URLEncoder.encode(strURL)
+					+ "&" + URLEncoder.encode(params);
+		String sig = generateSignature(params,oauth_token_secret);
+	
+		strBuf = new StringBuffer(280); 
+		strBuf.append("OAuth realm=\"Fantalker\",oauth_consumer_key=\"");
+		strBuf.append(consumer_key);
+		strBuf.append("\",oauth_signature_method=\"HMAC-SHA1\"");
+		strBuf.append(",oauth_timestamp=\"").append(timestamp).append("\"");
+		strBuf.append(",oauth_nonce=\"").append(nonce).append("\"");
+		strBuf.append(",oauth_signature=\"").append(sig).append("\"");
+		strBuf.append(",oauth_token=\"").append(oauth_token).append("\"");
+		String authorization =  strBuf.toString();
+		
+		strURL = strURL + "?count=60&page=" + pageID;
+		try {
+			URL url = new URL(strURL);
+			HttpURLConnection connection;
+			connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("GET");
+			connection.addRequestProperty("Authorization",authorization);
+			connection.connect();
+			return connection;
+		} catch (SocketTimeoutException e) {
+			setLog("连接超时 " + e.getMessage());
+		} catch (IOException e) {
+			setLog(e.getMessage());
+		}
+		return null;
+	}
+	
+	
+	/**
+	 * 调用GET /favorites 浏览指定用户收藏消息
+	 * @param pageID 指定返回结果的页码
+	 * @return
+	 * @see https://github.com/FanfouAPI/FanFouAPIDoc/wiki/favorites
+	 */
+	public HttpURLConnection favorites(int page)
+	{
+		String strURL = "http://api.fanfou.com/favorites/id.json";
+		return connectAPI(strURL,page);
+	}
+	
+	
+	/**
 	 * 获取月份
 	 * @param month
 	 * @return 数字月份
@@ -454,55 +515,10 @@ public class ExportTread extends Thread
 	 * @return
 	 * @see https://github.com/FanfouAPI/FanFouAPIDoc/wiki/statuses.mentions
 	 */
-	@SuppressWarnings("deprecation")
 	public HttpURLConnection mention(int page)
 	{
-		long timestamp = System.currentTimeMillis() / 1000;
-		long nonce = System.nanoTime();
 		String strURL = "http://api.fanfou.com/statuses/mentions.json";
-		String pageID = String.valueOf(page);
-		
-		StringBuffer strBuf = new StringBuffer(200);
-		strBuf.append("count=60");
-		strBuf.append("&oauth_consumer_key=").append(consumer_key);
-		strBuf.append("&oauth_nonce=").append(nonce);
-		strBuf.append("&oauth_signature_method=HMAC-SHA1");
-		strBuf.append("&oauth_timestamp=").append(timestamp);
-		strBuf.append("&oauth_token=").append(oauth_token);
-		String params = strBuf.toString();
-		
-	
-		params = params + "&page=" + pageID;
-	
-		params = "GET&" + URLEncoder.encode(strURL)
-					+ "&" + URLEncoder.encode(params);
-		String sig = generateSignature(params,oauth_token_secret);
-	
-		strBuf = new StringBuffer(280); 
-		strBuf.append("OAuth realm=\"Fantalker\",oauth_consumer_key=\"");
-		strBuf.append(consumer_key);
-		strBuf.append("\",oauth_signature_method=\"HMAC-SHA1\"");
-		strBuf.append(",oauth_timestamp=\"").append(timestamp).append("\"");
-		strBuf.append(",oauth_nonce=\"").append(nonce).append("\"");
-		strBuf.append(",oauth_signature=\"").append(sig).append("\"");
-		strBuf.append(",oauth_token=\"").append(oauth_token).append("\"");
-		String authorization =  strBuf.toString();
-		
-		strURL = strURL + "?count=60&page=" + pageID;
-		try {
-			URL url = new URL(strURL);
-			HttpURLConnection connection;
-			connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestMethod("GET");
-			connection.addRequestProperty("Authorization",authorization);
-			connection.connect();
-			return connection;
-		} catch (SocketTimeoutException e) {
-			setLog("连接超时 " + e.getMessage());
-		} catch (IOException e) {
-			setLog(e.getMessage());
-		}
-		return null;
+		return connectAPI(strURL,page);
 	}
 
 
@@ -767,10 +783,7 @@ public class ExportTread extends Thread
 		String location;
 		JSONObject photojson;
 		String photourl = "";
-		String filename;
-		String fname = null;	//文件名(不含扩展)
-		@SuppressWarnings("unused")
-		String picname;
+		String picname = "";
 		/* 由JSON中分离信息并写入文件 */
 		try {
 			JSONArray jsonarr = new JSONArray(line);
@@ -785,32 +798,16 @@ public class ExportTread extends Thread
 			
 			if(format == 3)
 			{
-				DateFormat df = new SimpleDateFormat("yyyyMMdd");
-		        StringBuffer sb = new StringBuffer(20);
-				if(Main.rdbtnFriTL.isSelected())
-				{
-					sb.append(df.format(new Date())).append(Main.txtFriID.getText());
-					fname = sb.toString();
-					sb.append("_").append(page).append(".html");
-				}
-				else
-				{
-			        sb.append(df.format(new Date()));
-					sb.append(Main.txtUsr.getText());
-					fname = sb.toString();
-			        sb.append("_").append(page).append(".html");
-				}
-				filename = filepath + "/" + sb.toString();
 				try {
-					outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filename),"gb2312"));
+					outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename + "_" + String.valueOf(page) + ".html"),"gb2312"));
 					outstream.println("<html>");
 					outstream.println("<head>");
 					outstream.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=gb2312\">");
 					outstream.println("<title>" + filename + "</title>");
 					outstream.println("</head>");
 					outstream.println("<body>");
-					outstream.print("<a href=\"" + fname + "_" + String.valueOf(page-1) + ".html\">上一页</a>  ");
-					outstream.println("<a href=\"" + fname + "_" + String.valueOf(page+1) + ".html\">下一页</a><br /><hr><br />");
+					outstream.print("<a href=\"" + filepath + "/" + filename + "_" + String.valueOf(page-1) + ".html\">上一页</a>  ");
+					outstream.println("<a href=\"" + filepath + "/" + filename + "_" + String.valueOf(page+1) + ".html\">下一页</a><br /><hr><br />");
 				} catch (FileNotFoundException e) {
 					setLog(e.getMessage());
 			    	Main.isStart = false;
@@ -844,6 +841,7 @@ public class ExportTread extends Thread
 				location = userjson.getString("location");
 				
 				photourl = "";
+				picname = "";
 				try {
 					photojson = json[j].getJSONObject("photo");
 					photourl = photojson.getString("largeurl");
@@ -900,9 +898,9 @@ public class ExportTread extends Thread
 					outstream.println("<br /><br />");
 					outstream.println(text);
 					outstream.println("<br /><br />");
-					if(photourl != "")
+					if(picname != "")
 					{
-						outstream.println("<img src=\"" + photourl + "\" /><br />");
+						outstream.println("<img src=\"" + filename + "_pic\\" + picname + "\" /><br />");
 					}
 					outstream.println("<small>" + created_at + "</small>");
 					outstream.println("<br /><small>" + "通过 " + source + "</small>");
@@ -924,8 +922,8 @@ public class ExportTread extends Thread
 		}
 		if(format == 3)
 		{
-			outstream.print("<a href=\"" + fname + "_" + String.valueOf(page-1) + ".html\">上一页</a>  ");
-			outstream.println("<a href=\"" + fname + "_" + String.valueOf(page+1) + ".html\">下一页</a><br />");
+			outstream.print("<a href=\"" + filepath + "/" + filename + "_" + String.valueOf(page-1) + ".html\">上一页</a>  ");
+			outstream.println("<a href=\"" + filepath + "/" + filename + "_" + String.valueOf(page+1) + ".html\">下一页</a><br /><hr><br />");
 			outstream.println("</body>");
 			outstream.println("</html>");
 			outstream.close();

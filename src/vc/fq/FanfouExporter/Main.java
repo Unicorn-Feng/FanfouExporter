@@ -76,6 +76,7 @@ public class Main
 	public static JRadioButton rdbtnMention;
 	public static JRadioButton rdbtnDM;
 	public static JRadioButton rdbtnFriTL;
+	public static JRadioButton rdbtnFav;
 	public static boolean isStart = false;
 	public static ExportTread export = new ExportTread();
 
@@ -95,7 +96,7 @@ public class Main
 			}
 		});
 		frame.setLocationRelativeTo(null);
-		frame.setSize(522, 427);
+		frame.setSize(551, 427);
 		frame.add(panelTop);
 		SpringLayout sl_panelTop = new SpringLayout();
 		panelTop.setLayout(sl_panelTop);
@@ -118,6 +119,7 @@ public class Main
 		panelTop.add(lblFileNmae);
 		
 		JLabel lblFileType = new JLabel("文件格式");
+		sl_panelTop.putConstraint(SpringLayout.NORTH, lblFileType, 83, SpringLayout.NORTH, panelTop);
 		sl_panelTop.putConstraint(SpringLayout.WEST, lblFileType, 10, SpringLayout.WEST, panelTop);
 		lblFileType.setFont(new Font("宋体", Font.PLAIN, 14));
 		panelTop.add(lblFileType);
@@ -148,6 +150,7 @@ public class Main
 		txtFilePath.setText(dir);
 		
 		rdbtnCSV = new JRadioButton(".csv");
+		sl_panelTop.putConstraint(SpringLayout.SOUTH, rdbtnCSV, -295, SpringLayout.SOUTH, panelTop);
 		rdbtnCSV.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
@@ -167,7 +170,6 @@ public class Main
 		sl_panelTop.putConstraint(SpringLayout.NORTH, btnBrowse, -2, SpringLayout.NORTH, lblFileNmae);
 		sl_panelTop.putConstraint(SpringLayout.EAST, btnBrowse, 0, SpringLayout.EAST, txtUsr);
 		panelTop.add(btnBrowse);
-		sl_panelTop.putConstraint(SpringLayout.NORTH, lblFileType, 4, SpringLayout.NORTH, rdbtnCSV);
 		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnCSV, 14, SpringLayout.EAST, lblFileType);
 		rdbtnCSV.setFont(new Font("宋体", Font.PLAIN, 14));
 		panelTop.add(rdbtnCSV);
@@ -213,13 +215,13 @@ public class Main
 		panelTop.add(btnStart);
 		
 		txtLog = new JTextArea();
-		txtLog.setText("饭否消息导出工具 v2.1.1\r\n发布日期:2012年7月4日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
+		txtLog.setText("饭否消息导出工具 v2.2.0\r\n发布日期:2012年7月5日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
 		txtLog.setEditable(false);
 		JScrollPane scroll = new JScrollPane(txtLog);
-		sl_panelTop.putConstraint(SpringLayout.NORTH, scroll, 166, SpringLayout.NORTH, panelTop);
 		sl_panelTop.putConstraint(SpringLayout.SOUTH, btnStart, -6, SpringLayout.NORTH, scroll);
+		sl_panelTop.putConstraint(SpringLayout.NORTH, scroll, 166, SpringLayout.NORTH, panelTop);
+		sl_panelTop.putConstraint(SpringLayout.SOUTH, scroll, -10, SpringLayout.SOUTH, panelTop);
 		sl_panelTop.putConstraint(SpringLayout.WEST, scroll, 0, SpringLayout.WEST, lblUsr);
-		sl_panelTop.putConstraint(SpringLayout.SOUTH, scroll, -32, SpringLayout.SOUTH, panelTop);
 		sl_panelTop.putConstraint(SpringLayout.EAST, scroll, 0, SpringLayout.EAST, txtUsr);
 		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -234,7 +236,7 @@ public class Main
 		panelTop.add(chkbxPic);
 		
 		JLabel lblExpType = new JLabel("导出内容");
-		sl_panelTop.putConstraint(SpringLayout.NORTH, lblExpType, 9, SpringLayout.SOUTH, lblFileType);
+		sl_panelTop.putConstraint(SpringLayout.NORTH, lblExpType, 108, SpringLayout.NORTH, panelTop);
 		sl_panelTop.putConstraint(SpringLayout.EAST, lblExpType, 0, SpringLayout.EAST, lblFileType);
 		lblExpType.setFont(new Font("宋体", Font.PLAIN, 14));
 		panelTop.add(lblExpType);
@@ -248,24 +250,24 @@ public class Main
 		});
 		rdbtnUsrTL.setSelected(true);
 		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnUsrTL, 105, SpringLayout.NORTH, panelTop);
-		sl_panelTop.putConstraint(SpringLayout.SOUTH, rdbtnCSV, -1, SpringLayout.NORTH, rdbtnUsrTL);
 		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnUsrTL, 0, SpringLayout.WEST, txtUsr);
 		rdbtnUsrTL.setFont(new Font("宋体", Font.PLAIN, 12));
 		panelTop.add(rdbtnUsrTL);
 		
 		rdbtnMention = new JRadioButton("@提到我的消息");
+		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnMention, 0, SpringLayout.SOUTH, rdbtnHTML);
+		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnMention, 0, SpringLayout.EAST, rdbtnUsrTL);
 		rdbtnMention.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
 				onRadioButton2Click(2);
 			}
 		});
-		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnMention, 0, SpringLayout.NORTH, rdbtnUsrTL);
-		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnMention, 0, SpringLayout.EAST, rdbtnUsrTL);
 		rdbtnMention.setFont(new Font("宋体", Font.PLAIN, 12));
 		panelTop.add(rdbtnMention);
 		
 		rdbtnDM = new JRadioButton("私信");
+		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnDM, 0, SpringLayout.SOUTH, rdbtnHTML);
 		rdbtnDM.setEnabled(false);
 		rdbtnDM.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
@@ -273,20 +275,31 @@ public class Main
 				onRadioButton2Click(3);
 			}
 		});
-		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnDM, 0, SpringLayout.NORTH, rdbtnUsrTL);
 		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnDM, -10, SpringLayout.WEST, chkbxPic);
 		rdbtnDM.setFont(new Font("宋体", Font.PLAIN, 12));
 		panelTop.add(rdbtnDM);
 		
+		rdbtnFav = new JRadioButton("收藏");
+		rdbtnFav.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				onRadioButton2Click(5);
+			}
+		});
+		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnFav, -3, SpringLayout.NORTH, lblExpType);
+		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnFav, 0, SpringLayout.EAST, rdbtnDM);
+		rdbtnFav.setFont(new Font("宋体", Font.PLAIN, 12));
+		panelTop.add(rdbtnFav);
+		
 		rdbtnFriTL = new JRadioButton("指定好友已发消息");
+		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnFriTL, -3, SpringLayout.NORTH, lblExpType);
+		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnFriTL, 0, SpringLayout.EAST, rdbtnFav);
 		rdbtnFriTL.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
 				onRadioButton2Click(4);
 			}
 		});
-		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnFriTL, -3, SpringLayout.NORTH, lblExpType);
-		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnFriTL, 0, SpringLayout.EAST, rdbtnDM);
 		rdbtnFriTL.setFont(new Font("宋体", Font.PLAIN, 12));
 		panelTop.add(rdbtnFriTL);
 		
@@ -295,17 +308,18 @@ public class Main
 		buttongroup2.add(rdbtnMention);
 		buttongroup2.add(rdbtnDM);
 		buttongroup2.add(rdbtnFriTL);
+		buttongroup2.add(rdbtnFav);
 		
 		txtFriID = new JTextField();
-		txtFriID.setEnabled(false);
 		sl_panelTop.putConstraint(SpringLayout.NORTH, txtFriID, -2, SpringLayout.NORTH, lblExpType);
-		sl_panelTop.putConstraint(SpringLayout.WEST, txtFriID, 0, SpringLayout.EAST, rdbtnFriTL);
+		sl_panelTop.putConstraint(SpringLayout.WEST, txtFriID, 121, SpringLayout.EAST, rdbtnFav);
 		sl_panelTop.putConstraint(SpringLayout.EAST, txtFriID, 0, SpringLayout.EAST, txtUsr);
+		txtFriID.setEnabled(false);
 		txtFriID.setText("好友ID");
 		txtFriID.setToolTipText("好友ID");
 		panelTop.add(txtFriID);
 		txtFriID.setColumns(10);
-		
+			
 		frame.setVisible(true);
 	}
 	
@@ -337,7 +351,7 @@ public class Main
 	
 	/**
 	 * 导出内容单选按钮点击
-	 * @param num 1已发 2@ 3私信 4指定好友
+	 * @param num 1已发 2@ 3私信 4指定好友 5收藏
 	 */
 	public static void onRadioButton2Click(int num)
 	{
