@@ -154,10 +154,15 @@ public class ExportTread extends Thread
 			format = 2;
 			extention = ".xml";
 		}
-		else
+		else if(Main.rdbtnHTML.isSelected())
 		{
 			format = 3;
 			extention = ".html";
+		}
+		else
+		{
+			format = 4;
+			extention = ".txt";
 		}
 
 		setLog("\r\n导出数据存储在" + filepath + "\\" + filename + extention);
@@ -241,7 +246,10 @@ public class ExportTread extends Thread
 		if(format != 3)															//不为html格式
 		{
 			try {
-				outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename + extention),"gb2312"));
+				if(format == 1)		//.csv
+					outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename + extention),"gb2312"));
+				else
+					outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename + extention),"UTF-8"));
 			} catch (FileNotFoundException e) {
 				setLog(e.getMessage());
 		    	Main.isStart = false;
@@ -261,7 +269,7 @@ public class ExportTread extends Thread
 		}
 		else if(format == 2)
 		{
-			outstream.println("<?xml version=\"1.0\" encoding=\"GB2312\"?>");
+			outstream.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
 			outstream.println("<statuses>");
 		}
 		
@@ -379,7 +387,6 @@ public class ExportTread extends Thread
 	 * @param page
 	 * @return
 	 */
-	@SuppressWarnings("deprecation")
 	public HttpURLConnection connectAPI(String strURL, int page)
 	{
 		long timestamp = System.currentTimeMillis() / 1000;
@@ -398,8 +405,12 @@ public class ExportTread extends Thread
 	
 		params = params + "&page=" + pageID;
 
-		params = "GET&" + URLEncoder.encode(strURL)
-					+ "&" + URLEncoder.encode(params);
+		try {
+			params = "GET&" + URLEncoder.encode(strURL,"UTF-8")
+						+ "&" + URLEncoder.encode(params,"UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			setLog("编码错误");
+		}
 		String sig = generateSignature(params,oauth_token_secret);
 	
 		strBuf = new StringBuffer(280); 
@@ -595,7 +606,6 @@ public class ExportTread extends Thread
 	 * @return
 	 * @see https://github.com/FanfouAPI/FanFouAPIDoc/wiki/statuses.user-timeline
 	 */
-	@SuppressWarnings("deprecation")
 	public HttpURLConnection timeline(int page, String userID)
 	{
 		long timestamp = System.currentTimeMillis() / 1000;
@@ -619,8 +629,12 @@ public class ExportTread extends Thread
 
 		params = params + "&page=" + pageID;
 
-		params = "GET&" + URLEncoder.encode(strURL)
-					+ "&" + URLEncoder.encode(params);
+		try {
+			params = "GET&" + URLEncoder.encode(strURL,"UTF-8")
+						+ "&" + URLEncoder.encode(params,"UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			setLog("编码错误");
+		}
 		String sig = generateSignature(params,oauth_token_secret);
 
 		strBuf = new StringBuffer(280); 
@@ -673,7 +687,6 @@ public class ExportTread extends Thread
 	 * @param password
 	 * @return oauth_token=Access_Token&oauth_token_secret=Access_Token_Secret
 	 */
-	@SuppressWarnings("deprecation")
 	public String XAuth(String username, String password)
 	{
 		URL url;
@@ -696,8 +709,14 @@ public class ExportTread extends Thread
 				+ "&x_auth_password=" + password
 				+ "&x_auth_mode=client_auth";
 	
-		params = "GET&" + URLEncoder.encode(url.toString())
-					+ "&" + URLEncoder.encode(params);
+
+		try {
+			params = "GET&" + URLEncoder.encode(url.toString(),"UTF-8")
+						+ "&" + URLEncoder.encode(params,"UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			setLog("编码错误");
+		}
+
 		String sig = generateSignature(params);
 		
 		authorization = "OAuth realm=\"Fantalker\",oauth_consumer_key=\"" + consumer_key
@@ -766,7 +785,7 @@ public class ExportTread extends Thread
 	/**
 	 * 写文件
 	 * @param line 读取到的JSON内容
-	 * @param format 格式 1csv 2xml 3html
+	 * @param format 格式 1csv 2xml 3html 4txt
 	 * @param page 页码
 	 */
 	public void writeFile(String line, int format, int page)
@@ -799,10 +818,10 @@ public class ExportTread extends Thread
 			if(format == 3)
 			{
 				try {
-					outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename + "_" + String.valueOf(page) + ".html"),"gb2312"));
+					outstream = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filepath + "/" + filename + "_" + String.valueOf(page) + ".html"),"UTF-8"));
 					outstream.println("<html>");
 					outstream.println("<head>");
-					outstream.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=gb2312\">");
+					outstream.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
 					outstream.println("<title>" + filename + "</title>");
 					outstream.println("</head>");
 					outstream.println("<body>");
@@ -888,7 +907,7 @@ public class ExportTread extends Thread
 					outstream.println("    </user>");
 					outstream.println("  </status>");
 				}
-				else	//html
+				else if(format == 3)	//html
 				{
 					outstream.println("<b>" + screen_name + "</b> " + userid);
 					outstream.println("<br />");
@@ -908,6 +927,19 @@ public class ExportTread extends Thread
 					outstream.println("<small>id: " + id + "</small>");
 					outstream.println("<br /><br />");
 					outstream.println("<hr><br />");
+				}
+				else	//txt
+				{
+					outstream.println("@" + screen_name + " (" + userid + ")");
+					outstream.println();
+					outstream.println(text);
+					outstream.println();
+					outstream.println(created_at);
+					outstream.println("通过 " + source);
+					outstream.println("id: " + id);
+					outstream.println();
+					outstream.println("========================================");
+					outstream.println();
 				}
 				
 			}//for
@@ -941,7 +973,6 @@ public class ExportTread extends Thread
      * @return signature
      * @see <a href="http://oauth.net/core/1.0/#rfc.section.9.2.1">OAuth Core - 9.2.1.  Generating Signature</a>
      */
-    @SuppressWarnings("deprecation")
 	public static String generateSignature(String data,String token) 
     {
         byte[] byteHMAC = null;
@@ -965,7 +996,12 @@ public class ExportTread extends Thread
         } catch (NoSuchAlgorithmException ignore) {
             // should never happen
         }
-        return URLEncoder.encode(BASE64Encoder.encode(byteHMAC));
+        try {
+			return URLEncoder.encode(BASE64Encoder.encode(byteHMAC),"UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			setLog("编码错误");
+		}
+        return null;
     }
     
     

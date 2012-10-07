@@ -68,6 +68,7 @@ public class Main
 	public static JRadioButton rdbtnCSV;
 	public static JRadioButton rdbtnXML;
 	public static JRadioButton rdbtnHTML;
+	public static JRadioButton rdbtnTXT;
 	public static JTextArea txtLog;
 	public static JTextField txtUsr;
 	public static JTextField txtFilePath;
@@ -207,10 +208,23 @@ public class Main
 		rdbtnHTML.setFont(new Font("宋体", Font.PLAIN, 14));
 		panelTop.add(rdbtnHTML);
 		
+		rdbtnTXT = new JRadioButton(".txt");
+		rdbtnTXT.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				onRadioButtonClick(4);
+			}
+		});
+		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnTXT, -3, SpringLayout.NORTH, lblFileType);
+		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnTXT, 6, SpringLayout.EAST, rdbtnHTML);
+		rdbtnTXT.setFont(new Font("宋体", Font.PLAIN, 14));
+		panelTop.add(rdbtnTXT);
+		
 		buttongroup = new ButtonGroup();
 		buttongroup.add(rdbtnCSV);
 		buttongroup.add(rdbtnXML);
 		buttongroup.add(rdbtnHTML);
+		buttongroup.add(rdbtnTXT);
 
 		btnStart = new JButton("开始");
 		sl_panelTop.putConstraint(SpringLayout.WEST, btnStart, 0, SpringLayout.WEST, lblUsr);
@@ -223,7 +237,7 @@ public class Main
 		panelTop.add(btnStart);
 		
 		txtLog = new JTextArea();
-		txtLog.setText("饭否消息导出工具 v2.3.0\r\n发布日期:2012年7月5日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
+		txtLog.setText("饭否消息导出工具 v2.4.0\r\n发布日期:2012年10月7日\r\n作者：@烽麒\r\n网站：http://fq.vc\r\n");
 		txtLog.setEditable(false);
 		JScrollPane scroll = new JScrollPane(txtLog);
 		sl_panelTop.putConstraint(SpringLayout.SOUTH, btnStart, -6, SpringLayout.NORTH, scroll);
@@ -236,10 +250,10 @@ public class Main
 		panelTop.add(scroll);
 		
 		chkbxPic = new JCheckBox("导出图片");
+		sl_panelTop.putConstraint(SpringLayout.NORTH, chkbxPic, -4, SpringLayout.NORTH, lblFileType);
+		sl_panelTop.putConstraint(SpringLayout.WEST, chkbxPic, 6, SpringLayout.EAST, rdbtnTXT);
 		chkbxPic.setSelected(true);
 		chkbxPic.setEnabled(false);
-		sl_panelTop.putConstraint(SpringLayout.NORTH, chkbxPic, -4, SpringLayout.NORTH, lblFileType);
-		sl_panelTop.putConstraint(SpringLayout.WEST, chkbxPic, 6, SpringLayout.EAST, rdbtnHTML);
 		chkbxPic.setFont(new Font("宋体", Font.PLAIN, 14));
 		panelTop.add(chkbxPic);
 		
@@ -276,6 +290,7 @@ public class Main
 		
 		rdbtnDM = new JRadioButton("私信");
 		sl_panelTop.putConstraint(SpringLayout.NORTH, rdbtnDM, 0, SpringLayout.SOUTH, rdbtnHTML);
+		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnDM, 102, SpringLayout.EAST, rdbtnUsrTL);
 		rdbtnDM.setEnabled(false);
 		rdbtnDM.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
@@ -283,7 +298,6 @@ public class Main
 				onRadioButton2Click(3);
 			}
 		});
-		sl_panelTop.putConstraint(SpringLayout.WEST, rdbtnDM, -10, SpringLayout.WEST, chkbxPic);
 		rdbtnDM.setFont(new Font("宋体", Font.PLAIN, 12));
 		panelTop.add(rdbtnDM);
 		
@@ -341,7 +355,7 @@ public class Main
 	
 	/**
 	 * 单选按钮被点击
-	 * @param Num 1csv，2xml. 3html
+	 * @param Num 1csv，2xml. 3html. 4txt
 	 */
 	public static void onRadioButtonClick(int num)
 	{
@@ -349,6 +363,11 @@ public class Main
 		{
 			chkbxPic.setEnabled(false);
 			chkbxPic.setSelected(true);
+		}
+		else if(num == 4)
+		{
+			chkbxPic.setEnabled(false);
+			chkbxPic.setSelected(false);
 		}
 		else
 		{
